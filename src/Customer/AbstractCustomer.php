@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Ruga\Party\Customer;
 
-
-use Ruga\Address\AbstractAddress;
 use Ruga\Contact\AbstractContactMechanism;
 use Ruga\Contact\ContactMechanismTable;
 use Ruga\Contact\ContactMechanismType;
+use Ruga\Contact\Subtype\Address\AbstractAddress;
 use Ruga\Contact\Subtype\Address\AddressAttributesInterface;
 use Ruga\Db\Row\AbstractRugaRow;
 use Ruga\Db\Row\Exception\InvalidArgumentException;
@@ -33,14 +32,14 @@ use Ruga\Party\Subtype\Person\PersonAttributesInterface;
  * @author   Roland Rusch, easy-smart solution GmbH <roland.rusch@easy-smart.ch>
  */
 abstract class AbstractCustomer extends AbstractRugaRow implements CustomerAttributesInterface,
-                                                                    PartyAttributesInterface,
-                                                                    PartyHasOrganizationAttributesInterface,
-                                                                    PartyHasPersonAttributesInterface,
-                                                                    OrganizationAttributesInterface,
-                                                                    PersonAttributesInterface,
-                                                                    AddressAttributesInterface, CustomerInterface,
-                                                                    FullnameFeatureRowInterface,
-                                                                    PartyRelationshipInterface
+                                                                   PartyAttributesInterface,
+                                                                   PartyHasOrganizationAttributesInterface,
+                                                                   PartyHasPersonAttributesInterface,
+                                                                   OrganizationAttributesInterface,
+                                                                   PersonAttributesInterface,
+                                                                   AddressAttributesInterface, CustomerInterface,
+                                                                   FullnameFeatureRowInterface,
+                                                                   PartyRelationshipInterface
 {
     /** @var AbstractParty */
     private $party;

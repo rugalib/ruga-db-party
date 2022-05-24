@@ -8,7 +8,7 @@ use Laminas\ServiceManager\ServiceManager;
 use Ruga\Party\Party;
 
 /**
- * @author                 Roland Rusch, easy-smart solution GmbH <roland.rusch@easy-smart.ch>
+ * @author Roland Rusch, easy-smart solution GmbH <roland.rusch@easy-smart.ch>
  */
 class PartyTest extends \Ruga\Party\Test\PHPUnit\AbstractTestSetUp
 {
