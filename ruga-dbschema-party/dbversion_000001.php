@@ -17,8 +17,8 @@ return <<<"SQL"
 SET FOREIGN_KEY_CHECKS = 0;
 CREATE TABLE `{$customer}` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `fullname` VARCHAR(255) NULL,
-  `customer_number` VARCHAR(255) NULL,
+  `fullname` VARCHAR(190) NULL,
+  `customer_number` VARCHAR(190) NULL,
   `Party_id` INT NOT NULL,
   `remark` TEXT NULL,
   `created` DATETIME NOT NULL,

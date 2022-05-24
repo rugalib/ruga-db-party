@@ -16,7 +16,7 @@ return <<<"SQL"
 SET FOREIGN_KEY_CHECKS = 0;
 CREATE TABLE `{$party}` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `fullname` VARCHAR(255) NULL,
+  `fullname` VARCHAR(190) NULL,
   `party_role` SET('CUSTOMER', 'SUPPLIER', 'PROSPECT', 'SHAREHOLDER') NULL DEFAULT NULL,
   `remark` TEXT NULL,
   `created` DATETIME NOT NULL,

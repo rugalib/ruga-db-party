@@ -16,7 +16,7 @@ return <<<"SQL"
 SET FOREIGN_KEY_CHECKS = 0;
 CREATE TABLE `{$tenant}` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `fullname` VARCHAR(255) NULL,
+  `fullname` VARCHAR(190) NULL,
   `Party_id` INT NULL DEFAULT NULL,
   `remark` TEXT NULL,
   `created` DATETIME NOT NULL,
