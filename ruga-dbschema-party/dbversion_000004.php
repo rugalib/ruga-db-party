@@ -5,18 +5,20 @@ declare(strict_types=1);
 /**
  * @return string
  * @var \Ruga\Db\Schema\Resolver $resolver
- * @var string                    $comp_name
+ * @var string                   $comp_name
  */
-$party = $resolver->getTableName(\Ruga\Party\PartyTable::class);
-$person = $resolver->getTableName(\Ruga\Party\Subtype\Person\PersonTable::class);
-$user = $resolver->getTableName(\Ruga\User\UserTable::class);
-$partyhasperson = $resolver->getTableName(\Ruga\Party\Link\Person\PartyHasPersonTable::class);
+$partyTable = $resolver->getTableName(\Ruga\Party\PartyTable::class);
+
+if ($partySubtype_values = implode("','", \Ruga\Party\PartySubtypeType::getConstants())) {
+    $partySubtype_values = "'{$partySubtype_values}'";
+}
+$partySubtype_default = \Ruga\Party\PartySubtypeType::__default;
 
 return <<<"SQL"
 
 SET FOREIGN_KEY_CHECKS = 0;
-ALTER TABLE `{$party}` ADD COLUMN `party_subtype` ENUM('PERSON','ORGANIZATION') NOT NULL DEFAULT 'ORGANIZATION' AFTER `party_role`;
-ALTER TABLE `{$party}` ADD INDEX `{$party}_party_subtype_idx` (`party_subtype`);
+ALTER TABLE `{$partyTable}` ADD COLUMN `party_subtype` ENUM({$partySubtype_values}) NOT NULL DEFAULT '{$partySubtype_default}' AFTER `party_role`;
+ALTER TABLE `{$partyTable}` ADD INDEX `{$partyTable}_party_subtype_idx` (`party_subtype`);
 SET FOREIGN_KEY_CHECKS = 1;
 
 SQL;

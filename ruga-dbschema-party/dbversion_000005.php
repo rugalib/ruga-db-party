@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * @return string
+ * @var \Ruga\Db\Schema\Resolver $resolver
+ * @var string                   $comp_name
+ */
+
 return <<<'SQL'
 
 SET FOREIGN_KEY_CHECKS = 0;

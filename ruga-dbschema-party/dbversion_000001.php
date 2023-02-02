@@ -7,15 +7,15 @@ declare(strict_types=1);
  * @var \Ruga\Db\Schema\Resolver $resolver
  * @var string                    $comp_name
  */
-$party = $resolver->getTableName(\Ruga\Party\PartyTable::class);
-$customer = $resolver->getTableName(\Ruga\Party\Customer\CustomerTable::class);
-$user = $resolver->getTableName(\Ruga\User\UserTable::class);
+$partyTable = $resolver->getTableName(\Ruga\Party\PartyTable::class);
+$customerTable = $resolver->getTableName(\Ruga\Party\Customer\CustomerTable::class);
+$userTable = $resolver->getTableName(\Ruga\User\UserTable::class);
 
 
 return <<<"SQL"
 
 SET FOREIGN_KEY_CHECKS = 0;
-CREATE TABLE `{$customer}` (
+CREATE TABLE `{$customerTable}` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `fullname` VARCHAR(190) NULL,
   `customer_number` VARCHAR(190) NULL,
@@ -26,13 +26,13 @@ CREATE TABLE `{$customer}` (
   `changed` DATETIME NOT NULL,
   `changedBy` INT NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX `{$customer}_fullname_idx` (`fullname`),
-  INDEX `fk_{$customer}_Party_id_idx` (`Party_id` ASC),
-  INDEX `fk_{$customer}_changedBy_idx` (`changedBy` ASC),
-  INDEX `fk_{$customer}_createdBy_idx` (`createdBy` ASC),
-  CONSTRAINT `fk_{$customer}_Party_id` FOREIGN KEY (`Party_id`) REFERENCES `{$party}` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `fk_{$customer}_changedBy` FOREIGN KEY (`changedBy`) REFERENCES `{$user}` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `fk_{$customer}_createdBy` FOREIGN KEY (`createdBy`) REFERENCES `{$user}` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+  INDEX `{$customerTable}_fullname_idx` (`fullname`),
+  INDEX `fk_{$customerTable}_Party_id_idx` (`Party_id` ASC),
+  INDEX `fk_{$customerTable}_changedBy_idx` (`changedBy` ASC),
+  INDEX `fk_{$customerTable}_createdBy_idx` (`createdBy` ASC),
+  CONSTRAINT `fk_{$customerTable}_Party_id` FOREIGN KEY (`Party_id`) REFERENCES `{$partyTable}` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `fk_{$customerTable}_changedBy` FOREIGN KEY (`changedBy`) REFERENCES `{$userTable}` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `fk_{$customerTable}_createdBy` FOREIGN KEY (`createdBy`) REFERENCES `{$userTable}` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 )
 ENGINE=InnoDB
 ;

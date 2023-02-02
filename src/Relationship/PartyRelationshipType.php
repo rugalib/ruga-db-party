@@ -8,15 +8,15 @@ namespace Ruga\Party\Relationship;
  * Class PartyRelationshipType.
  * Representation of the PartyHasParty::$relationship_type.
  *
- * @method static PartyRelationshipType CUSTOMER()
- * @method static PartyRelationshipType EMPLOYEE()
- * @method static PartyRelationshipType CONTRACTOR()
- * @method static PartyRelationshipType SUPPLIER()
- * @method static PartyRelationshipType CONTACT()
- * @method static PartyRelationshipType DISTRIBUTOR()
- * @method static PartyRelationshipType PARTNER()
- * @method static PartyRelationshipType ORGANIZATION_UNIT()
- * @method static PartyRelationshipType REPRESENTATIVE()
+ * @method static self CUSTOMER()
+ * @method static self EMPLOYEE()
+ * @method static self CONTRACTOR()
+ * @method static self SUPPLIER()
+ * @method static self CONTACT()
+ * @method static self DISTRIBUTOR()
+ * @method static self PARTNER()
+ * @method static self ORGANIZATION_UNIT()
+ * @method static self REPRESENTATIVE()
  */
 class PartyRelationshipType extends \Ruga\Std\Enum\AbstractEnum
 {

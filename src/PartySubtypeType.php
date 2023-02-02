@@ -17,6 +17,8 @@ class PartySubtypeType extends AbstractEnum
     const PERSON = 'PERSON';
     const ORGANIZATION = 'ORGANIZATION';
     
+    const __default = self::ORGANIZATION;
+    
     const __fullnameMap = [
         self::PERSON => 'Person',
         self::ORGANIZATION => 'Firma',
