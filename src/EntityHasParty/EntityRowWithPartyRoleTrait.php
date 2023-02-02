@@ -64,7 +64,7 @@ trait EntityRowWithPartyRoleTrait
     /**
      * Unlink the given PARTY with the given role from the entity.
      *
-     * @param PartyInterface $party
+     * @param PartyInterface     $party
      * @param EntityHasPartyRole $partyRole
      *
      * @return bool
@@ -81,7 +81,7 @@ trait EntityRowWithPartyRoleTrait
         $select = $sql->select();
         $select->where([
                            "{$entityTableName}_id" => $this->id,
-                           "{$partyTableName}_id" => $party->id,
+                           "Party_id" => $party->id,
                            "party_role" => "{$partyRole}",
                        ]);
         $links = $entityHasPartyTable->selectWith($select);
@@ -92,6 +92,35 @@ trait EntityRowWithPartyRoleTrait
         }
         
         return true;
+    }
+    
+    
+    
+    /**
+     * Link the given PARTY with the given role to the entity.
+     *
+     * @param PartyInterface     $party
+     * @param EntityHasPartyRole $partyRole
+     *
+     * @return EntityHasPartyInterface
+     * @throws \Exception
+     */
+    public function linkParty(PartyInterface $party, EntityHasPartyRole $partyRole): EntityHasPartyInterface
+    {
+        $entityTableName = $this->table;
+        $partyTable = new PartyTable($this->getTableGateway()->getAdapter());
+        $partyTableName = $partyTable->table;
+        $entityHasPartyTableName = "{$entityTableName}_has_{$partyTableName}";
+        /** @var AbstractEntityHasPartyTable $entityHasPartyTable */
+        $entityHasPartyTable = $this->getTableGateway()->getAdapter()->tableFactory($entityHasPartyTableName);
+        
+        $link = $entityHasPartyTable->createRow([
+                                                    "{$entityTableName}_id" => $this->id,
+                                                    "Party_id" => $party->id,
+                                                    "party_role" => "{$partyRole}",
+                                                ]);
+        
+        return $link;
     }
     
     

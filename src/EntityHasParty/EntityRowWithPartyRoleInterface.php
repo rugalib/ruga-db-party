@@ -34,4 +34,17 @@ interface EntityRowWithPartyRoleInterface
      * @return bool
      */
     public function unlinkParty(PartyInterface $party, EntityHasPartyRole $partyRole): bool;
+    
+    
+    
+    /**
+     * Link the given PARTY with the given role to the entity.
+     *
+     * @param PartyInterface     $party
+     * @param EntityHasPartyRole $partyRole
+     *
+     * @return EntityHasPartyInterface
+     */
+    public function linkParty(PartyInterface $party, EntityHasPartyRole $partyRole): EntityHasPartyInterface;
+    
 }
