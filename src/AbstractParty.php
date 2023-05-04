@@ -11,10 +11,12 @@ use Ruga\Contact\Link\ContactMechanismCapableObjectTrait;
 use Ruga\Db\Row\AbstractRugaRow;
 use Ruga\Db\Row\Exception\InvalidArgumentException;
 use Ruga\Db\Row\Feature\FullnameFeatureRowInterface;
+use Ruga\Db\Row\RowInterface;
 use Ruga\Party\Exception\IllegalSubtypeLinkException;
 use Ruga\Party\Link\AbstractLinkParty;
 use Ruga\Party\Link\Organization\PartyHasOrganizationAttributesInterface;
 use Ruga\Party\Link\Person\PartyHasPersonAttributesInterface;
+use Ruga\Party\Link\User\PartyHasUserTable;
 use Ruga\Party\Relationship\PartyHasParty;
 use Ruga\Party\Relationship\PartyHasPartyTable;
 use Ruga\Party\Relationship\PartyRelationshipInterface;
@@ -24,6 +26,7 @@ use Ruga\Party\Subtype\Organization\OrganizationAttributesInterface;
 use Ruga\Party\Subtype\Person\Person;
 use Ruga\Party\Subtype\Person\PersonAttributesInterface;
 use Ruga\Party\Subtype\SubtypeRowInterface;
+use Ruga\User\User;
 
 /**
  * Abstract party.
@@ -469,5 +472,20 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
         );
     }
     
+    
+    
+    /**
+     * Link the PARTY to the given USER.
+     *
+     * @param User  $user
+     * @param array $rowData
+     *
+     * @return RowInterface
+     * @throws \ReflectionException
+     */
+    public function linkToUser(User $user, array $rowData=[]): RowInterface
+    {
+        return $this->getParty()->linkManyToManyRow($user, PartyHasUserTable::class, $rowData, 'User_id');
+    }
     
 }

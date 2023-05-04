@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace Ruga\Party\Test;
 
 
+use Ruga\Party\Link\User\PartyHasUserTable;
+use Ruga\Party\Party;
+use Ruga\Person\Person;
+use Ruga\User\User;
+
 /**
  * @author Roland Rusch, easy-smart solution GmbH <roland.rusch@easy-smart.ch>
  */
@@ -74,6 +79,29 @@ class UserTest extends \Ruga\Party\Test\PHPUnit\AbstractTestSetUp
             echo "Tenant: {$tenant->idname}" . PHP_EOL;
             $this->assertInstanceOf(\Ruga\Party\Tenant\Tenant::class, $tenant);
         }
+    }
+    
+    
+    
+    public function testCanLinkUserToParty(): void
+    {
+        $userTable = new \Ruga\User\UserTable($this->getAdapter());
+        /** @var User $user */
+        $user = $userTable->createRow(['username' => 'markus.hugentobler', 'fullname' => 'Markus Hugentobler']);
+        
+        $partyTable = new \Ruga\Party\PartyTable($this->getAdapter());
+        /** @var Party $party */
+        $party = $partyTable->createRow(['party_subtype' => \Ruga\Party\PartySubtypeType::PERSON]);
+        $party->first_name='Markus';
+        $party->last_name='Hugentobler';
+        
+        $party->linkToUser($user);
+        $party->save();
+        
+        $personTable = new \Ruga\Person\PersonTable($this->getAdapter());
+        /** @var Person $person */
+        $person = $personTable->select(['first_name' => 'Markus', 'last_name' => 'Hugentobler'])->current();
+        $this->assertInstanceOf(Person::class, $person);
     }
     
 }

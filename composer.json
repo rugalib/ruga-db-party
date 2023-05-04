@@ -6,7 +6,7 @@
   "type": "library",
   "require": {
     "php": "^7.4",
-    "rugalib/ruga-db": "^1.0",
+    "rugalib/ruga-db": "1.2.x-dev",
     "rugalib/ruga-log": "^1.0",
     "rugalib/ruga-std": "^1.0",
     "rugalib/ruga-db-user": "^1.0",
@@ -20,6 +20,10 @@
     "laminas/laminas-servicemanager": "^3"
   },
   "repositories": [
+    {
+      "type": "path",
+      "url": "../ruga-db/"
+    },
     {
       "type": "composer",
       "url": "https://packages.rugalib.ch/"
