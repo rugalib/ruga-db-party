@@ -61,6 +61,11 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/object-enumerator" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/rugalib/ruga-db-contact" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-cache-storage-deprecated-factory" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-filter" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-form" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-hydrator" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-inputfilter" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-validator" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr/clock" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/stella-maris/clock" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/webmozart/assert" />
