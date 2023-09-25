@@ -10,8 +10,11 @@ namespace Ruga\Party;
 
 use Ruga\Contact\ContactMechanism;
 use Ruga\Contact\ContactMechanismTable;
+use Ruga\Contact\ContactMechanismType;
 use Ruga\Contact\Link\ContactMechanismCapableObjectInterface;
 use Ruga\Contact\Link\ContactMechanismCapableObjectTrait;
+use Ruga\Contact\Link\Party\PartyHasContactMechanismTable;
+use Ruga\Db\Row\AbstractRow;
 use Ruga\Db\Row\AbstractRugaRow;
 use Ruga\Db\Row\Exception\InvalidArgumentException;
 use Ruga\Db\Row\Feature\FullnameFeatureRowInterface;
@@ -48,7 +51,7 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
                                                                 PartyRelationshipInterface,
                                                                 ContactMechanismCapableObjectInterface
 {
-    use ContactMechanismCapableObjectTrait;
+//    use ContactMechanismCapableObjectTrait;
     
     /** @var AbstractLinkParty */
     private $subtypelink;
@@ -157,37 +160,6 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
     
     
     
-    public function save()
-    {
-        try {
-            $this->getTableGateway()->getAdapter()->getDriver()->getConnection()->beginTransaction();
-            
-            $ret = parent::save();
-            
-            // Save the sub type (Organizaion, Person)
-            $this->getSubtype()->save();
-            
-            // Save the sub type link
-            $this->getSubtypeLink()->Party_id = $this->id;
-            $this->getSubtypeLink()->Subtype_id = $this->getSubtype()->id;
-            $this->getSubtypeLink()->save();
-            
-            // Save the registered contact mechanisms
-            $this->saveRegisteredContactMechanisms();
-            
-            return $ret;
-        } catch (\Exception $e) {
-            $this->getTableGateway()->getAdapter()->getDriver()->getConnection()->rollback();
-            throw $e;
-        } finally {
-            if (!isset($e)) {
-                $this->getTableGateway()->getAdapter()->getDriver()->getConnection()->commit();
-            }
-        }
-    }
-    
-    
-    
     public function getSubtypeLink(): AbstractLinkParty
     {
 //        \Ruga\Log::functionHead($this);
@@ -198,14 +170,14 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
                     "'{$this->party_subtype}' is not valid subtype for '" . get_class($this) . "'"
                 );
             }
-            $suptypeLinkTableClassName = null;
+            $subtypeLinkTableClassName = null;
             foreach (PartySubtypeType::getObjects() as $object) {
                 if ($object->val == $this->party_subtype) {
-                    $suptypeLinkTableClassName = $object->suptypeLinkTableClass;
+                    $subtypeLinkTableClassName = $object->subtypeLinkTableClass;
                 }
             }
             
-            $t = new $suptypeLinkTableClassName($this->getTableGateway()->getAdapter());
+            $t = new $subtypeLinkTableClassName($this->getTableGateway()->getAdapter());
             if ($this->isNew() || !$this->subtypelink = $t->select(
                     ['Party_id' => $this->id]
                 )->current()) {
@@ -244,38 +216,35 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
     
     
     
+    /**
+     * Return the subtype (PERSON/ORGANIZATION) of the PARTY. If the subtype does not exist, it is created as new row.
+     *
+     * @return SubtypeRowInterface
+     * @throws \ReflectionException
+     */
     public function getSubtype(): SubtypeRowInterface
     {
-//        \Ruga\Log::functionHead($this);
-        
-        if (!$this->subtype) {
-            if (!PartySubtypeType::isValidValue($this->party_subtype)) {
-                throw new Exception\IllegalSubtypeLinkException(
-                    "'{$this->party_subtype}' is not valid subtype for '" . get_class($this) . "'"
-                );
-            }
-            $suptypeTableClassName = null;
-            foreach (PartySubtypeType::getObjects() as $object) {
-                if ($object->val == $this->party_subtype) {
-                    $suptypeTableClassName = $object->subtypeTableClass;
-                    $subtypeLinkKeyName = $object->val == 'ORGANIZATION' ? 'Organization_id' : 'Person_id';
-                }
-            }
-            $t = new $suptypeTableClassName($this->getTableGateway()->getAdapter());
-            if ($this->isNew() || !$this->getSubtypeLink() || !isset(
-                    $this->getSubtypeLink()->Subtype_id
-                ) || !$this->subtype = $t->findById(
-                    $this->getSubtypeLink()->Subtype_id
-                )->current()) {
-                $this->subtype = $t->createRow();
-            }
-        }
-        if (!$this->subtype instanceof SubtypeRowInterface) {
+        if (!PartySubtypeType::isValidValue($this->party_subtype)) {
             throw new Exception\IllegalSubtypeLinkException(
-                "subtype is not a '" . SubtypeRowInterface::class . "'."
+                "'{$this->party_subtype}' is not valid subtype for '" . get_class($this) . "'"
             );
         }
-        return $this->subtype;
+        $subtypeTableClass = null;
+        foreach (PartySubtypeType::getObjects() as $object) {
+            if ($object->val == $this->party_subtype) {
+                $subtypeTableClass = $object->subtypeTableClass;
+                $subtypeLinkTableClass = $object->subtypeLinkTableClass;
+                $subtypeLinkKeyName = $object->val == 'ORGANIZATION' ? 'Organization_id' : 'Person_id';
+            }
+        }
+        
+        if ($subtypeTableClass) {
+            if (!$subtype = $this->findManyToManyRowset($subtypeTableClass, $subtypeLinkTableClass)->current()) {
+                $subtype = $this->createManyToManyRow($subtypeTableClass, $subtypeLinkTableClass);
+            }
+        }
+        
+        return $subtype;
     }
     
     
@@ -302,7 +271,7 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
      * Links two parties.
      * Read: $this is a $relType of $party2
      *
-     * @param Party $party2
+     * @param Party                 $party2
      * @param PartyRelationshipType $relType
      *
      * @return PartyHasParty
@@ -487,9 +456,44 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
      * @return RowInterface
      * @throws \ReflectionException
      */
-    public function linkToUser(User $user, array $rowData=[]): RowInterface
+    public function linkToUser(User $user, array $rowData = []): RowInterface
     {
         return $this->getParty()->linkManyToManyRow($user, PartyHasUserTable::class, $rowData, 'User_id');
+    }
+    
+    
+    
+    /**
+     * Register the contact mechanism to the object, so that the object can save the contect mechanism later.
+     *
+     * @param ContactMechanism $contactMechanism
+     *
+     * @return void
+     */
+    
+    public function registerContactMechanismForSave(ContactMechanism $contactMechanism)
+    {
+        $contactMechanism->linkManyToManyRow($this, PartyHasContactMechanismTable::class);
+    }
+    
+    
+    
+    /**
+     * Create a contact mechanism of the given type and register it to the object.
+     *
+     * @param ContactMechanismType $contactMechanismType
+     *
+     * @return ContactMechanism
+     * @throws \ReflectionException
+     */
+    public function createContactMechanism(ContactMechanismType $contactMechanismType): ContactMechanism
+    {
+        /** @var AbstractRow $this */
+        /** @var ContactMechanism $contactMechanism */
+        $contactMechanism = (new ContactMechanismTable($this->getTableGateway()->getAdapter()))->createRow();
+        $contactMechanism->contactmechanism_type = $contactMechanismType;
+        $contactMechanism->linkTo($this);
+        return $contactMechanism;
     }
     
 }

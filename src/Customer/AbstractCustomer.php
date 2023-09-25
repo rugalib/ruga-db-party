@@ -8,9 +8,13 @@ declare(strict_types=1);
 
 namespace Ruga\Party\Customer;
 
+use Laminas\Db\Sql\Select;
+use Laminas\Db\Sql\Where;
 use Ruga\Contact\AbstractContactMechanism;
+use Ruga\Contact\ContactMechanism;
 use Ruga\Contact\ContactMechanismTable;
 use Ruga\Contact\ContactMechanismType;
+use Ruga\Contact\Link\Party\PartyHasContactMechanismTable;
 use Ruga\Contact\Subtype\Address\AbstractAddress;
 use Ruga\Contact\Subtype\Address\AddressAttributesInterface;
 use Ruga\Db\Row\AbstractRugaRow;
@@ -19,6 +23,7 @@ use Ruga\Db\Row\Feature\FullnameFeatureRowInterface;
 use Ruga\Party\AbstractParty;
 use Ruga\Party\Link\Organization\PartyHasOrganizationAttributesInterface;
 use Ruga\Party\Link\Person\PartyHasPersonAttributesInterface;
+use Ruga\Party\Party;
 use Ruga\Party\PartyAttributesInterface;
 use Ruga\Party\PartyTable;
 use Ruga\Party\Relationship\PartyHasParty;
@@ -45,14 +50,6 @@ abstract class AbstractCustomer extends AbstractRugaRow implements CustomerAttri
                                                                    FullnameFeatureRowInterface,
                                                                    PartyRelationshipInterface
 {
-    /** @var AbstractParty */
-    private $party;
-    
-    /** @var AbstractContactMechanism */
-    private $contactmechanism_address;
-    
-    
-    
     /**
      * Return the party object.
      *
@@ -61,16 +58,10 @@ abstract class AbstractCustomer extends AbstractRugaRow implements CustomerAttri
      */
     public function getParty(): AbstractParty
     {
-        if (!$this->party) {
-            if (!isset($this->Party_id) || !($this->party = (new PartyTable(
-                    $this->getTableGateway()->getAdapter()
-                ))->findById(
-                    $this->Party_id
-                )->current())) {
-                $this->party = (new PartyTable($this->getTableGateway()->getAdapter()))->createRow();
-            }
+        if (!$party = $this->findParentRow(PartyTable::class)) {
+            $party = $this->createParentRow(PartyTable::class);
         }
-        return $this->party;
+        return $party;
     }
     
     
@@ -86,27 +77,25 @@ abstract class AbstractCustomer extends AbstractRugaRow implements CustomerAttri
     
     public function getAddress(): AbstractAddress
     {
-        \Ruga\Log::functionHead();
+        /** @var Party $party */
+        $party = $this->getParty();
+        $cmRowset = $party->findManyToManyRowset(
+            ContactMechanismTable::class,
+            PartyHasContactMechanismTable::class,
+            null,
+            null,
+            (new Select())->where(function (Where $where) {
+                $where->equalTo('contactmechanism_type', ContactMechanismType::POSTAL_ADDRESS);
+            })
+        );
         
-        if (!$this->contactmechanism_address) {
-            /** @var AbstractContactMechanism $contactmechanism */
-            foreach ($this->findContactMechanismTable() as $contactmechanism) {
-                if ($contactmechanism->contactmechanism_type == ContactMechanismType::POSTAL_ADDRESS) {
-                    $this->contactmechanism_address = $contactmechanism;
-                }
-            }
-            if (!$this->contactmechanism_address) {
-                $this->contactmechanism_address = (new ContactMechanismTable(
-                    $this->getTableGateway()->getAdapter()
-                ))->createRow(
-                    ['contactmechanism_type' => ContactMechanismType::POSTAL_ADDRESS]
-                );
-                $this->contactmechanism_address->linkTo($this->getParty());
-            }
+        /** @var ContactMechanism $cm */
+        if (!$cm = $cmRowset->current()) {
+            $cm = $party->createManyToManyRow(ContactMechanismTable::class, PartyHasContactMechanismTable::class);
+            $cm->contactmechanism_type = ContactMechanismType::POSTAL_ADDRESS;
         }
-
-//        \Ruga\Log::log_msg("contactmechanism_address: {$this->contactmechanism_address->idname}");
-        return $this->contactmechanism_address->getSubtype();
+        
+        return $cm->getSubtype();
     }
     
     
@@ -116,6 +105,7 @@ abstract class AbstractCustomer extends AbstractRugaRow implements CustomerAttri
      * Fullname is saved in the row to speed up queries.
      *
      * @return string
+     * @throws \ReflectionException
      */
     public function getFullname(): string
     {
@@ -126,9 +116,6 @@ abstract class AbstractCustomer extends AbstractRugaRow implements CustomerAttri
     
     public function __get($name)
     {
-//        switch ($name) {
-//        }
-        
         // Try customer attributes
         try {
             return parent::__get($name);
@@ -202,28 +189,12 @@ abstract class AbstractCustomer extends AbstractRugaRow implements CustomerAttri
     
     public function save()
     {
-        try {
-            $this->getTableGateway()->getAdapter()->getDriver()->getConnection()->beginTransaction();
-            
-            $party = $this->getParty();
-            $party->party_role = array_merge($party->party_role, [PartyRole::CUSTOMER]);
+        $party = $this->getParty();
+        $party->party_role = array_merge($party->party_role, [PartyRole::CUSTOMER]);
+        if ($party->isNew()) {
             $party->save();
-            $this->Party_id = $party->id;
-            $ret = parent::save();
-            
-            if ($this->contactmechanism_address) {
-                $this->contactmechanism_address->save();
-            }
-            
-            return $ret;
-        } catch (\Exception $e) {
-            $this->getTableGateway()->getAdapter()->getDriver()->getConnection()->rollback();
-            throw $e;
-        } finally {
-            if (!isset($e)) {
-                $this->getTableGateway()->getAdapter()->getDriver()->getConnection()->commit();
-            }
         }
+        return parent::save();
     }
     
     

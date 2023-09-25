@@ -30,13 +30,13 @@ class PartySubtypeType extends AbstractEnum
     
     const __extraMap = [
         self::PERSON => [
-            'suptypeLinkTableClass' => Link\Person\PartyHasPersonTable::class,
+            'subtypeLinkTableClass' => Link\Person\PartyHasPersonTable::class,
             'subtypeTableClass' => Subtype\Person\PersonTable::class,
 //            'template' => 'contactmechanism-TelecomNumber-edit',
 //            'formClass' => Form\TelecomNumberForm::class,
         ],
         self::ORGANIZATION => [
-            'suptypeLinkTableClass' => Link\Organization\PartyHasOrganizationTable::class,
+            'subtypeLinkTableClass' => Link\Organization\PartyHasOrganizationTable::class,
             'subtypeTableClass' => Subtype\Organization\OrganizationTable::class,
 //            'template' => 'contactmechanism-TelecomNumber-edit',
 //            'formClass' => Form\TelecomNumberForm::class,
