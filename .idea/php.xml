@@ -44,21 +44,8 @@
       <path value="$PROJECT_DIR$/vendor/brick/varexporter" />
       <path value="$PROJECT_DIR$/vendor/nikic/php-parser" />
       <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache" />
-      <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-apc" />
-      <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-apcu" />
-      <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-blackhole" />
-      <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-dba" />
-      <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-ext-mongodb" />
       <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-filesystem" />
-      <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-memcache" />
-      <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-memcached" />
       <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-memory" />
-      <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-mongodb" />
-      <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-redis" />
-      <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-session" />
-      <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-wincache" />
-      <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-xcache" />
-      <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-adapter-zend-server" />
       <path value="$PROJECT_DIR$/vendor/laminas/laminas-config" />
       <path value="$PROJECT_DIR$/vendor/laminas/laminas-config-aggregator" />
       <path value="$PROJECT_DIR$/vendor/laminas/laminas-db" />
@@ -67,7 +54,6 @@
       <path value="$PROJECT_DIR$/vendor/laminas/laminas-serializer" />
       <path value="$PROJECT_DIR$/vendor/laminas/laminas-servicemanager" />
       <path value="$PROJECT_DIR$/vendor/laminas/laminas-stdlib" />
-      <path value="$PROJECT_DIR$/vendor/laminas/laminas-zendframework-bridge" />
       <path value="$PROJECT_DIR$/vendor/myclabs/deep-copy" />
       <path value="$PROJECT_DIR$/vendor/phar-io/manifest" />
       <path value="$PROJECT_DIR$/vendor/phar-io/version" />
@@ -80,6 +66,10 @@
       <path value="$PROJECT_DIR$/vendor/rugalib/ruga-db" />
       <path value="$PROJECT_DIR$/vendor/rugalib/ruga-db-contact" />
       <path value="$PROJECT_DIR$/vendor/rugalib/ruga-db-organization" />
+      <path value="$PROJECT_DIR$/vendor/laminas/laminas-cache-storage-deprecated-factory" />
+      <path value="$PROJECT_DIR$/vendor/psr/clock" />
+      <path value="$PROJECT_DIR$/vendor/stella-maris/clock" />
+      <path value="$PROJECT_DIR$/vendor/webmozart/assert" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="7.4" />
