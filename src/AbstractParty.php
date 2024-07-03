@@ -1,6 +1,6 @@
 <?php
 /*
- * SPDX-FileCopyrightText: 2023 Roland Rusch, easy-smart solution GmbH <roland.rusch@easy-smart.ch>
+ * SPDX-FileCopyrightText: 2024 Roland Rusch, easy-smart solution GmbH <roland.rusch@easy-smart.ch>
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
@@ -8,32 +8,48 @@ declare(strict_types=1);
 
 namespace Ruga\Party;
 
+use Core\Model\ReparaturTable;
+use Laminas\Db\ResultSet\ResultSetInterface;
+use Laminas\Db\Sql\ExpressionInterface;
+use Laminas\Db\Sql\Select;
+use Laminas\Db\Sql\Where;
 use Ruga\Contact\ContactMechanism;
 use Ruga\Contact\ContactMechanismTable;
 use Ruga\Contact\ContactMechanismType;
 use Ruga\Contact\Link\ContactMechanismCapableObjectInterface;
 use Ruga\Contact\Link\ContactMechanismCapableObjectTrait;
 use Ruga\Contact\Link\Party\PartyHasContactMechanismTable;
+use Ruga\Contact\Subtype\Address\AddressTable;
+use Ruga\Db\ResultSet\ResultSet;
 use Ruga\Db\Row\AbstractRow;
 use Ruga\Db\Row\AbstractRugaRow;
 use Ruga\Db\Row\Exception\InvalidArgumentException;
+use Ruga\Db\Row\Exception\NoDefaultValueException;
 use Ruga\Db\Row\Feature\FullnameFeatureRowInterface;
 use Ruga\Db\Row\RowInterface;
+use Ruga\Party\Customer\Customer;
+use Ruga\Party\Customer\CustomerTable;
 use Ruga\Party\Exception\IllegalSubtypeLinkException;
 use Ruga\Party\Link\AbstractLinkParty;
 use Ruga\Party\Link\Organization\PartyHasOrganizationAttributesInterface;
+use Ruga\Party\Link\Organization\PartyHasOrganizationTable;
 use Ruga\Party\Link\Person\PartyHasPersonAttributesInterface;
+use Ruga\Party\Link\Person\PartyHasPersonTable;
 use Ruga\Party\Link\User\PartyHasUserTable;
 use Ruga\Party\Relationship\PartyHasParty;
 use Ruga\Party\Relationship\PartyHasPartyTable;
 use Ruga\Party\Relationship\PartyRelationshipInterface;
 use Ruga\Party\Relationship\PartyRelationshipType;
+use Ruga\Party\Role\PartyRole;
 use Ruga\Party\Subtype\Organization\Organization;
 use Ruga\Party\Subtype\Organization\OrganizationAttributesInterface;
+use Ruga\Party\Subtype\Organization\OrganizationTable;
 use Ruga\Party\Subtype\Person\Person;
 use Ruga\Party\Subtype\Person\PersonAttributesInterface;
+use Ruga\Party\Subtype\Person\PersonTable;
 use Ruga\Party\Subtype\SubtypeRowInterface;
 use Ruga\User\User;
+use Ruga\User\UserTable;
 
 /**
  * Abstract party.
@@ -135,7 +151,56 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
             }
         }
         
-        // Try subtype (person/organization)
+        
+        // Try with prefix
+        if (strpos($name, '.') === false) {
+            throw $eThis;
+        }
+        
+        [$prefix, $subName] = explode('.', $name, 2);
+        try {
+            switch ($prefix) {
+                case PartySubtypeType::PERSON:
+                    if ($this->party_subtype == PartySubtypeType::PERSON) {
+                        $this->getSubtypePerson()->__set($subName, $value);
+                    }
+                    return;
+                    break;
+                
+                case PartySubtypeType::ORGANIZATION:
+                    if ($this->party_subtype == PartySubtypeType::ORGANIZATION) {
+                        $this->getSubtypeOrganization()->__set($subName, $value);
+                    }
+                    return;
+                    break;
+                
+                
+                default:
+                    // Contactmechanism
+                    if (ContactMechanismType::isValidValue($prefix)) {
+                        /** @var ContactMechanism $contactmechanism */
+                        $contactmechanism = $this->getContactMechanism(new ContactMechanismType($prefix));
+//                        $contactmechanism = $contactmechanisms->current();
+                        if (!$contactmechanism) {
+                            $contactmechanism = $this->createContactMechanism(new ContactMechanismType($prefix));
+                        }
+                        if (!$contactmechanism->isNew()) {
+                            $contactmechanism = $contactmechanism->clone();
+                            $this->linkManyToManyRow($contactmechanism, PartyHasContactMechanismTable::class);
+                        }
+                        $contactmechanism->__set($subName, $value);
+                        return;
+                    }
+            }
+            return;
+        } catch (\Exception $eSubtype) {
+            if (!$eSubtype instanceof \Ruga\Db\Row\Exception\InvalidArgumentException) {
+                throw $eSubtype;
+            }
+        }
+        
+        
+        /*
         try {
             $this->getSubtype()->__set($name, $value);
             return;
@@ -154,6 +219,7 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
                 throw $eSubtypeLink;
             }
         }
+        */
         
         throw $eThis;
     }
@@ -252,17 +318,129 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
     public function toArray(): array
     {
         $aParty = parent::toArray();
-        $aParty['html_link'] = "<a href=\"party/{$this->PK}/edit\">" . $this->fullname . '</a>';
-        $aParty['isDisabled'] = $this->isDisabled();
+        $aParty["html_link"] = "<a href=\"party/{$this->PK}/edit\">" . $this->fullname . '</a>';
+        $aParty["isDisabled"] = $this->isDisabled();
         
-        $aParty['isDisabled'] = false;
-        $aParty['isDeleted'] = false;
-        $aParty['canBeChangedBy'] = true;
+        $aParty["isDisabled"] = false;
+        $aParty["isDeleted"] = false;
+        $aParty["canBeChangedBy"] = true;
         
+        $aParty = array_merge($aParty, $this->toArrayParent(UserTable::class, "changedBy"));
+        $aParty = array_merge($aParty, $this->toArrayParent(UserTable::class, "createdBy"));
+//        $aParty = array_merge($aParty, $this->toArrayDependent(PartyHasPersonTable::class));
+//        $aParty = array_merge($aParty, $this->toArrayDependent(PartyHasOrganizationTable::class));
+//        $aParty = array_merge($aParty, $this->toArrayDependent(PartyHasContactMechanismTable::class));
         
-        $aSubtypeLink = $this->getSubtypeLink()->toArray();
-        $aSubtype = $this->getSubtype()->toArray();
-        return array_merge($aSubtypeLink, $aSubtype, $aParty);
+        $aParty = array_merge(
+            $aParty,
+            $this->toArrayManyToMany(
+                ContactMechanismTable::class,
+                PartyHasContactMechanismTable::class,
+                null,
+                null,
+                null,
+                function (
+                    int $index,
+                    RowInterface $mRow,
+                    array $mTableConstraint,
+                    RowInterface $nRow,
+                    array $nTableConstraint,
+                    RowInterface $iRow
+                ) {
+                    $iPrefix = "{$mRow->contactmechanism_type}.iRow";
+                    $mPrefix = "{$mRow->contactmechanism_type}";
+                    return [$iPrefix, $mPrefix];
+                }
+            )
+        );
+        
+        $aParty = array_merge(
+            $aParty,
+            $this->toArrayDependent(
+                CustomerTable::class,
+                null,
+                null,
+                function (
+                    int $index,
+                    RowInterface $dependentRow,
+                    array $dependentConstraint,
+                    RowInterface $parentRow
+                ) {
+                    return "CUSTOMER";
+                }
+            )
+        );
+        
+        $aParty = array_merge(
+            $aParty,
+            $this->toArrayManyToMany(
+                PersonTable::class,
+                PartyHasPersonTable::class,
+                null,
+                null,
+                null,
+                function (
+                    int $index,
+                    RowInterface $mRow,
+                    array $mTableConstraint,
+                    RowInterface $nRow,
+                    array $nTableConstraint,
+                    RowInterface $iRow
+                ) {
+                    $iPrefix = "PERSON.iRow";
+                    $mPrefix = "PERSON";
+                    return [$iPrefix, $mPrefix];
+                }
+            )
+        );
+        
+        $aParty = array_merge(
+            $aParty,
+            $this->toArrayManyToMany(
+                OrganizationTable::class,
+                PartyHasOrganizationTable::class,
+                null,
+                null,
+                null,
+                function (
+                    int $index,
+                    RowInterface $mRow,
+                    array $mTableConstraint,
+                    RowInterface $nRow,
+                    array $nTableConstraint,
+                    RowInterface $iRow
+                ) {
+                    $iPrefix = "ORGANIZATION.iRow";
+                    $mPrefix = "ORGANIZATION";
+                    return [$iPrefix, $mPrefix];
+                }
+            )
+        );
+        
+        $aParty = array_merge(
+            $aParty,
+            $this->toArrayManyToMany(
+                UserTable::class,
+                PartyHasUserTable::class,
+                null,
+                'fk_Party_has_User_User_id',
+                null,
+                function (
+                    int $index,
+                    RowInterface $mRow,
+                    array $mTableConstraint,
+                    RowInterface $nRow,
+                    array $nTableConstraint,
+                    RowInterface $iRow
+                ) {
+                    $iPrefix = "USER.iRow";
+                    $mPrefix = "USER";
+                    return [$iPrefix, $mPrefix];
+                }
+            )
+        );
+        
+        return $aParty;
     }
     
     
@@ -438,11 +616,16 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
     
     
     
+    /**
+     * Find the contact mechanism table associated with the current object.
+     *
+     * @return ResultSetInterface|ResultSet The contact mechanism result set.
+     * @throws \ReflectionException
+     */
     public function findContactMechanismTable()
     {
-        return (new ContactMechanismTable($this->getTableGateway()->getAdapter()))->findContactMechanismTable(
-            $this
-        );
+        return (new ContactMechanismTable($this->getTableGateway()->getAdapter()))
+            ->findContactMechanismTable($this);
     }
     
     
@@ -474,6 +657,7 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
     public function registerContactMechanismForSave(ContactMechanism $contactMechanism)
     {
         $contactMechanism->linkManyToManyRow($this, PartyHasContactMechanismTable::class);
+//        $this->linkManyToManyRow($contactMechanism, PartyHasContactMechanismTable::class);
     }
     
     
@@ -494,6 +678,47 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
         $contactMechanism->contactmechanism_type = $contactMechanismType;
         $contactMechanism->linkTo($this);
         return $contactMechanism;
+    }
+    
+    
+    
+    public function getContactMechanism(ContactMechanismType $contactMechanismType): ContactMechanism
+    {
+        $contactmechanism = null;
+        $cmt = $this->findContactMechanismTable();
+        /** @var ContactMechanism $cm */
+        foreach ($cmt as $cm) {
+            if ($cm->contactmechanism_type == $contactMechanismType->getValue()) {
+                $contactmechanism = $cm;
+            }
+        }
+        
+        $select = new Select();
+        $select->where(
+            function (Where $where) use ($contactMechanismType) {
+                $where->equalTo('contactmechanism_type', $contactMechanismType->getValue());
+            }
+        );
+        
+        $cmt2 = $this->findManyToManyRowset(
+            ContactMechanismTable::class,
+            PartyHasContactMechanismTable::class,
+            null,
+            null,
+            $select
+        );
+        foreach ($cmt2 as $cm) {
+            if ($cm->isNew() && ($cm->getPreviousClone()) && ($cm->getPreviousClone(
+                    )->uniqueid == $contactmechanism->uniqueid)) {
+                $contactmechanism = $cm;
+            }
+        }
+        
+        if (!$contactmechanism) {
+            $contactmechanism = $this->createContactMechanism($contactMechanismType);
+        }
+        
+        return $contactmechanism;
     }
     
 }

@@ -1,12 +1,16 @@
 <?php
 /*
- * SPDX-FileCopyrightText: 2023 Roland Rusch, easy-smart solution GmbH <roland.rusch@easy-smart.ch>
+ * SPDX-FileCopyrightText: 2024 Roland Rusch, easy-smart solution GmbH <roland.rusch@easy-smart.ch>
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
 declare(strict_types=1);
 
 namespace Ruga\Party\Link;
+
+use Ruga\Db\Row\Exception\NoConstraintsException;
+use Ruga\Party\Subtype\Organization\OrganizationTable;
+use Ruga\Party\Subtype\Person\PersonTable;
 
 /**
  * Abstract party link.
@@ -44,6 +48,16 @@ abstract class AbstractLinkParty extends \Ruga\Db\Row\AbstractRugaRow
                 break;
         }
         parent::__set($name, $value);
+    }
+    
+    
+    
+    public function toArray(): array
+    {
+        $data = parent::toArray();
+        $data = array_merge($data, $this->toArrayParent(PersonTable::class));
+        $data = array_merge($data, $this->toArrayParent(OrganizationTable::class));
+        return $data;
     }
     
     

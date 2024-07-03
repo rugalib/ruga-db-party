@@ -6,7 +6,7 @@
   "type": "library",
   "require": {
     "php": "^7.4|^8.0|^8.1|^8.2",
-    "rugalib/ruga-db": "^1.3",
+    "rugalib/ruga-db": "^1.5",
     "rugalib/ruga-log": "^1.0",
     "rugalib/ruga-std": "^1.0",
     "rugalib/ruga-db-user": "^1.0",
