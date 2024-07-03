@@ -128,7 +128,7 @@ class PartyTest extends \Ruga\Party\Test\PHPUnit\AbstractTestSetUp
         $a = $row->toArray();
         $this->assertIsArray($a);
         print_r($a);
-        $this->assertSame('Meier AG', $a['name']);
+        $this->assertSame('Meier AG', $a['ORGANIZATION.name']);
     }
     
     

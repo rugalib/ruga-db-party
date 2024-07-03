@@ -151,6 +151,25 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
             }
         }
         
+        try {
+            $this->getSubtype()->__set($name, $value);
+            return;
+        } catch (\Exception $eSubtype) {
+            if (!$eSubtype instanceof \Ruga\Db\Row\Exception\InvalidArgumentException) {
+                throw $eSubtype;
+            }
+        }
+        
+        // Try subtypelink (person/organization)
+        try {
+            $this->getSubtypeLink()->__set($name, $value);
+            return;
+        } catch (\Exception $eSubtypeLink) {
+            if (!$eSubtypeLink instanceof \Ruga\Db\Row\Exception\InvalidArgumentException) {
+                throw $eSubtypeLink;
+            }
+        }
+        
         
         // Try with prefix
         if (strpos($name, '.') === false) {
@@ -199,27 +218,6 @@ abstract class AbstractParty extends AbstractRugaRow implements PartyAttributesI
             }
         }
         
-        
-        /*
-        try {
-            $this->getSubtype()->__set($name, $value);
-            return;
-        } catch (\Exception $eSubtype) {
-            if (!$eSubtype instanceof \Ruga\Db\Row\Exception\InvalidArgumentException) {
-                throw $eSubtype;
-            }
-        }
-        
-        // Try subtypelink (person/organization)
-        try {
-            $this->getSubtypeLink()->__set($name, $value);
-            return;
-        } catch (\Exception $eSubtypeLink) {
-            if (!$eSubtypeLink instanceof \Ruga\Db\Row\Exception\InvalidArgumentException) {
-                throw $eSubtypeLink;
-            }
-        }
-        */
         
         throw $eThis;
     }

@@ -53,8 +53,8 @@ class CustomerTest extends \Ruga\Party\Test\PHPUnit\AbstractTestSetUp
         $customer_number = uniqid();
         $customer->party_subtype = \Ruga\Party\PartySubtypeType::PERSON;
         $customer->customer_number = $customer_number;
-        $customer->first_name = $first_name;
-        $customer->last_name = $last_name;
+        $customer->getParty()->__set("PERSON.first_name", $first_name);
+        $customer->getParty()->__set("PERSON.last_name", $last_name);
         $this->assertSame($first_name, $customer->first_name);
         $this->assertSame($last_name, $customer->last_name);
         $this->assertSame("{$first_name} {$last_name}", $customer->fullname);
@@ -65,8 +65,8 @@ class CustomerTest extends \Ruga\Party\Test\PHPUnit\AbstractTestSetUp
         $customer_number = uniqid();
         $customer->party_subtype = \Ruga\Party\PartySubtypeType::ORGANIZATION;
         $customer->customer_number = $customer_number;
-        $customer->name = $name;
-        $customer->date_of_establishment = new \DateTimeImmutable();
+        $customer->getParty()->__set("ORGANIZATION.name", $name);
+        $customer->getParty()->__set("ORGANIZATION.date_of_establishment", new \DateTimeImmutable());
         $this->assertSame($name, $customer->name);
         $this->assertSame("{$name}", $customer->fullname);
         $customer->save();
